@@ -22,7 +22,6 @@ struct MenuBarRootView: View {
                 Divider().overlay(Color.black.opacity(0.10))
                 kitSelectionSection
                 controlsSection
-                LiveVisualizerView(sensorManager: viewModel.sensorManager)
                 hotkeyFootnote
             }
             .padding(16)
@@ -33,7 +32,7 @@ struct MenuBarRootView: View {
 
     private var headerBar: some View {
         HStack {
-            Text("Macandrum")
+            Text("MacBeat")
                 .font(.system(size: 27, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.black.opacity(0.82))
 

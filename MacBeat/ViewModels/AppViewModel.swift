@@ -127,13 +127,6 @@ final class AppViewModel: ObservableObject {
         audioEngine.kits
     }
 
-    var menuBarSymbol: String {
-        if drumsEnabled == false {
-            return "pause.circle.fill"
-        }
-        return sensorManager.connectionState == .connected ? "waveform.path.ecg.rectangle" : "hand.tap.fill"
-    }
-
     var hotKeyDescription: String {
         "Ctrl + Option + Command + D"
     }

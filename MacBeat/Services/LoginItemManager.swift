@@ -27,7 +27,7 @@ final class LoginItemManager: ObservableObject {
         do {
             if enabled {
                 try SMAppService.mainApp.register()
-                statusMessage = "Macandrum will launch at login."
+                statusMessage = "MacBeat will launch at login."
             } else {
                 try SMAppService.mainApp.unregister()
                 statusMessage = "Launch at login disabled."

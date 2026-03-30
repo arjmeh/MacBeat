@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Macandrum</string>
+	<string>MacBeat</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.music</string>
 	<key>LSUIElement</key>
@@ -11,7 +11,7 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Macandrum uses the built-in microphone to catch soft finger taps when the laptop accelerometer misses them.</string>
+	<string>MacBeat uses the built-in microphone to catch soft finger taps when the laptop accelerometer misses them.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSRequiresAquaSystemAppearance</key>

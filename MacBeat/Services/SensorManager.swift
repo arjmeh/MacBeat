@@ -49,7 +49,7 @@ final class SensorManager: ObservableObject {
         let thread = Thread { [weak self] in
             self?.runSensorLoop()
         }
-        thread.name = "Macandrum.SensorThread"
+        thread.name = "MacBeat.SensorThread"
         thread.qualityOfService = .userInteractive
         sensorThread = thread
         thread.start()

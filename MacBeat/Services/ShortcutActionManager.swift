@@ -2,7 +2,7 @@ import AudioToolbox
 import Foundation
 
 final class ShortcutActionManager {
-    private let queue = DispatchQueue(label: "Macandrum.Shortcuts", qos: .utility)
+    private let queue = DispatchQueue(label: "MacBeat.Shortcuts", qos: .utility)
     private var lastImpactTime: TimeInterval = 0
 
     func register(hit: HitEvent, mapping: ShortcutMapping, completion: @escaping (String) -> Void) {
@@ -37,7 +37,7 @@ final class ShortcutActionManager {
 
     private func takeScreenshot() {
         let screenshotsFolder = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Macandrum Shots", isDirectory: true)
+            .appendingPathComponent("MacBeat Shots", isDirectory: true)
         try? FileManager.default.createDirectory(at: screenshotsFolder, withIntermediateDirectories: true)
 
         let formatter = DateFormatter()

@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import CoreAudio
 import SwiftUI
 
 final class AudioEngine: ObservableObject {
@@ -9,17 +10,25 @@ final class AudioEngine: ObservableObject {
     private let engine = AVAudioEngine()
     private let mixer = AVAudioMixerNode()
     private let sampleRate = 44_100.0
-    private let audioQueue = DispatchQueue(label: "Macandrum.AudioQueue", qos: .userInteractive)
+    private let audioQueue = DispatchQueue(label: "MacBeat.AudioQueue", qos: .userInteractive)
 
     private var playerPool: [AVAudioPlayerNode] = []
     private var nextPlayerIndex = 0
     private var kitVoices: [String: [String: AVAudioPCMBuffer]] = [:]
     private var masterVolume: Float = 0.92
+    private var notificationObservers: [NSObjectProtocol] = []
+    private var restartWorkItem: DispatchWorkItem?
 
     init() {
         configureEngine()
         buildKits()
+        registerForAudioChanges()
         startEngine()
+    }
+
+    deinit {
+        notificationObservers.forEach(NotificationCenter.default.removeObserver)
+        restartWorkItem?.cancel()
     }
 
     func selectKit(id: String) {
@@ -43,6 +52,7 @@ final class AudioEngine: ObservableObject {
 
     func play(region: ChassisRegion, intensity: Double) -> PlayedPad? {
         audioQueue.sync {
+            guard self.ensureEngineRunning() else { return nil }
             guard let kit = currentKit() ?? kits.first else { return nil }
             let pad = choosePad(in: kit, for: region)
             guard let buffer = kitVoices[kit.id]?[pad.id] else { return nil }
@@ -84,6 +94,39 @@ final class AudioEngine: ObservableObject {
             engine.connect(player, to: mixer, format: AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1))
         }
         mixer.outputVolume = 1.0
+    }
+
+    private func registerForAudioChanges() {
+        let configObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: nil
+        ) { [weak self] _ in
+            self?.scheduleEngineRecovery(reason: "configuration change")
+        }
+        notificationObservers.append(configObserver)
+
+        let deviceQueue = DispatchQueue(label: "MacBeat.AudioDeviceObserver", qos: .userInteractive)
+        let outputProperties: [AudioObjectPropertySelector] = [
+            AudioObjectPropertySelector(kAudioHardwarePropertyDefaultOutputDevice),
+            AudioObjectPropertySelector(kAudioHardwarePropertyDefaultSystemOutputDevice)
+        ]
+
+        for selector in outputProperties {
+            var address = AudioObjectPropertyAddress(
+                mSelector: selector,
+                mScope: AudioObjectPropertyScope(kAudioObjectPropertyScopeGlobal),
+                mElement: AudioObjectPropertyElement(kAudioObjectPropertyElementMain)
+            )
+
+            AudioObjectAddPropertyListenerBlock(
+                AudioObjectID(kAudioObjectSystemObject),
+                &address,
+                deviceQueue
+            ) { [weak self] _, _ in
+                self?.scheduleEngineRecovery(reason: "default output changed")
+            }
+        }
     }
 
     private func buildKits() {
@@ -239,10 +282,68 @@ final class AudioEngine: ObservableObject {
 
     private func startEngine() {
         audioQueue.async {
-            self.engine.prepare()
-            if self.engine.isRunning == false {
-                try? self.engine.start()
+            _ = self.startEngineNow()
+        }
+    }
+
+    private func startEngineNow() -> Bool {
+        engine.prepare()
+        guard engine.isRunning == false else { return true }
+
+        do {
+            try engine.start()
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func ensureEngineRunning() -> Bool {
+        if engine.isRunning {
+            return true
+        }
+
+        for _ in 0..<3 {
+            if startEngineNow() {
+                return true
             }
+            engine.reset()
+            usleep(40_000)
+        }
+
+        scheduleEngineRecovery(reason: "play attempted while stopped")
+        return false
+    }
+
+    private func scheduleEngineRecovery(reason: String) {
+        audioQueue.async {
+            self.restartWorkItem?.cancel()
+
+            let workItem = DispatchWorkItem { [weak self] in
+                self?.recoverEngine(after: reason)
+            }
+
+            self.restartWorkItem = workItem
+            self.audioQueue.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+        }
+    }
+
+    private func recoverEngine(after reason: String) {
+        for player in playerPool {
+            player.stop()
+            player.reset()
+        }
+
+        engine.stop()
+        engine.reset()
+
+        for attempt in 0..<6 {
+            if startEngineNow() {
+                return
+            }
+
+            let waitMicros: useconds_t = attempt < 2 ? 80_000 : 180_000
+            usleep(waitMicros)
         }
     }
 

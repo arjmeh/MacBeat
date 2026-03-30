@@ -143,7 +143,7 @@ struct SettingsView: View {
                 .font(.headline)
             Text("Made with love — now tuned for fidgeters and desk drummers.")
                 .font(.body.weight(.semibold))
-            Text("Macandrum listens to the Apple Silicon accelerometer over IOKit HID, nudges the SPU driver awake for live reporting, and blends in microphone-assisted tap detection so soft finger rhythms still feel immediate.")
+            Text("MacBeat listens to the Apple Silicon accelerometer over IOKit HID, nudges the SPU driver awake for live reporting, and blends in microphone-assisted tap detection so soft finger rhythms still feel immediate.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text(viewModel.sensorManager.connectionMessage)

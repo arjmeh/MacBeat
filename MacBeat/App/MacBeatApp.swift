@@ -1,15 +1,20 @@
 import SwiftUI
 
 @main
-struct MacandrumApp: App {
+struct MacBeatApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var viewModel = AppViewModel()
 
     var body: some Scene {
-        MenuBarExtra("Macandrum", systemImage: viewModel.menuBarSymbol) {
+        MenuBarExtra {
             MenuBarRootView(viewModel: viewModel)
                 .frame(width: 530)
                 .preferredColorScheme(.light)
+        } label: {
+            MenuBarIconView(
+                isEnabled: viewModel.drumsEnabled,
+                isConnected: viewModel.sensorManager.connectionState == .connected
+            )
         }
         .menuBarExtraStyle(.window)
 

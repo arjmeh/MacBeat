@@ -12,7 +12,7 @@ struct KitCardView: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top) {
                     Image(systemName: kit.systemImage)
                         .font(.title3.weight(.semibold))
@@ -37,14 +37,6 @@ struct KitCardView: View {
                         .foregroundStyle(.white.opacity(0.82))
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
-                }
-
-                HStack(spacing: 10) {
-                    ForEach(kit.pads) { pad in
-                        Circle()
-                            .fill(pad.color)
-                            .frame(width: 14, height: 14)
-                    }
                 }
             }
             .padding(14)

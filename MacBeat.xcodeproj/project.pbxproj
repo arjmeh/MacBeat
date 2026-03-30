@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		E9647ED22F78EDD70050765D /* Macandrum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Macandrum.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E9647ED22F78EDD70050765D /* MacBeat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacBeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		E9647ED42F78EDD70050765D /* Macandrum */ = {
+		E9647ED42F78EDD70050765D /* MacBeat */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Macandrum;
+			path = MacBeat;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		E9647EC92F78EDD70050765D = {
 			isa = PBXGroup;
 			children = (
-				E9647ED42F78EDD70050765D /* Macandrum */,
+				E9647ED42F78EDD70050765D /* MacBeat */,
 				E9647ED32F78EDD70050765D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		E9647ED32F78EDD70050765D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E9647ED22F78EDD70050765D /* Macandrum.app */,
+				E9647ED22F78EDD70050765D /* MacBeat.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E9647ED12F78EDD70050765D /* Macandrum */ = {
+		E9647ED12F78EDD70050765D /* MacBeat */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E9647EDD2F78EDD90050765D /* Build configuration list for PBXNativeTarget "Macandrum" */;
+			buildConfigurationList = E9647EDD2F78EDD90050765D /* Build configuration list for PBXNativeTarget "MacBeat" */;
 			buildPhases = (
 				E9647ECE2F78EDD70050765D /* Sources */,
 				E9647ECF2F78EDD70050765D /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				E9647ED42F78EDD70050765D /* Macandrum */,
+				E9647ED42F78EDD70050765D /* MacBeat */,
 			);
-			name = Macandrum;
+			name = MacBeat;
 			packageProductDependencies = (
 			);
-			productName = Macandrum;
-			productReference = E9647ED22F78EDD70050765D /* Macandrum.app */;
+			productName = MacBeat;
+			productReference = E9647ED22F78EDD70050765D /* MacBeat.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E9647ECD2F78EDD70050765D /* Build configuration list for PBXProject "Macandrum" */;
+			buildConfigurationList = E9647ECD2F78EDD70050765D /* Build configuration list for PBXProject "MacBeat" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E9647ED12F78EDD70050765D /* Macandrum */,
+				E9647ED12F78EDD70050765D /* MacBeat */,
 			);
 		};
 /* End PBXProject section */
@@ -264,7 +264,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = arjunmehrotra.Macandrum;
+				PRODUCT_BUNDLE_IDENTIFIER = arjunmehrotra.MacBeat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = macosx;
@@ -295,7 +295,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = arjunmehrotra.Macandrum;
+				PRODUCT_BUNDLE_IDENTIFIER = arjunmehrotra.MacBeat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = macosx;
@@ -310,7 +310,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E9647ECD2F78EDD70050765D /* Build configuration list for PBXProject "Macandrum" */ = {
+		E9647ECD2F78EDD70050765D /* Build configuration list for PBXProject "MacBeat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E9647EDB2F78EDD90050765D /* Debug */,
@@ -319,7 +319,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E9647EDD2F78EDD90050765D /* Build configuration list for PBXNativeTarget "Macandrum" */ = {
+		E9647EDD2F78EDD90050765D /* Build configuration list for PBXNativeTarget "MacBeat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E9647EDE2F78EDD90050765D /* Debug */,

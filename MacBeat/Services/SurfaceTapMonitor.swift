@@ -19,7 +19,7 @@ final class SurfaceTapMonitor: ObservableObject {
     }
 
     private let engine = AVAudioEngine()
-    private let analysisQueue = DispatchQueue(label: "Macandrum.SurfaceTapMonitor", qos: .userInteractive)
+    private let analysisQueue = DispatchQueue(label: "MacBeat.SurfaceTapMonitor", qos: .userInteractive)
 
     private var noiseFloor = 0.002
     private var previousEnvelope = 0.0

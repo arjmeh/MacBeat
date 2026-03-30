@@ -10,123 +10,93 @@ struct LiveVisualizerView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Live Hit Visualizer")
-                    .font(.headline)
-                Spacer()
-                Text(sensorManager.lastHit?.region.title ?? "Listening")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(sensorManager.lastHit?.region.accent ?? .secondary)
-            }
-
-            HStack(spacing: 12) {
-                waveformCard
-                hitMap
-            }
-        }
-        .padding(14)
-        .background(cardBackground)
+        waveformPanel
     }
 
-    private var waveformCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Waveform")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            GeometryReader { geometry in
-                Canvas { context, size in
-                    var path = Path()
-                    let points = normalizedWaveform
-                    guard points.isEmpty == false else { return }
-
-                    for (index, point) in points.enumerated() {
-                        let x = size.width * CGFloat(index) / CGFloat(max(points.count - 1, 1))
-                        let centered = (point * 0.85) - 0.425
-                        let y = size.height * (0.5 - CGFloat(centered))
-                        if index == 0 {
-                            path.move(to: CGPoint(x: x, y: y))
-                        } else {
-                            path.addLine(to: CGPoint(x: x, y: y))
-                        }
-                    }
-
-                    context.stroke(
-                        path,
-                        with: .linearGradient(
-                            Gradient(colors: [.cyan, .pink, .green]),
-                            startPoint: .zero,
-                            endPoint: CGPoint(x: size.width, y: size.height)
-                        ),
-                        lineWidth: 2.5
+    private var waveformPanel: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.06),
+                            Color(red: 0.79, green: 0.89, blue: 0.98).opacity(0.10),
+                            Color(red: 0.90, green: 0.79, blue: 0.98).opacity(0.10)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
+                )
+
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.blue.opacity(0.18),
+                            Color.pink.opacity(0.18),
+                            Color.yellow.opacity(0.14),
+                            Color.green.opacity(0.18)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+
+            Canvas { context, size in
+                let rowCount = 4
+                let colCount = 6
+                let gridColor = Color.black.opacity(0.07)
+
+                for row in 1..<rowCount {
+                    let y = size.height * CGFloat(row) / CGFloat(rowCount)
+                    var line = Path()
+                    line.move(to: CGPoint(x: 0, y: y))
+                    line.addLine(to: CGPoint(x: size.width, y: y))
+                    context.stroke(line, with: .color(gridColor), lineWidth: 1)
                 }
-            }
-            .frame(height: 90)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(12)
-        .background(tileBackground)
-    }
 
-    private var hitMap: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Hit Map")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                for column in 1..<colCount {
+                    let x = size.width * CGFloat(column) / CGFloat(colCount)
+                    var line = Path()
+                    line.move(to: CGPoint(x: x, y: 0))
+                    line.addLine(to: CGPoint(x: x, y: size.height))
+                    context.stroke(line, with: .color(gridColor), lineWidth: 1)
+                }
 
-            GeometryReader { geometry in
-                let hitRegion = sensorManager.lastHit?.region
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                let points = normalizedWaveform
+                guard points.isEmpty == false else { return }
 
-                    VStack(spacing: 8) {
-                        regionTile(.top, selected: hitRegion == .top)
-                        HStack(spacing: 8) {
-                            regionTile(.left, selected: hitRegion == .left)
-                            regionTile(.center, selected: hitRegion == .center)
-                            regionTile(.right, selected: hitRegion == .right)
-                        }
-                        regionTile(.bottom, selected: hitRegion == .bottom)
+                var path = Path()
+                for (index, point) in points.enumerated() {
+                    let x = size.width * CGFloat(index) / CGFloat(max(points.count - 1, 1))
+                    let centered = (point * 0.90) - 0.45
+                    let y = size.height * (0.58 - CGFloat(centered))
+                    if index == 0 {
+                        path.move(to: CGPoint(x: x, y: y))
+                    } else {
+                        path.addLine(to: CGPoint(x: x, y: y))
                     }
-                    .padding(10)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height)
+
+                context.stroke(path, with: .color(Color.cyan.opacity(0.24)), lineWidth: 12)
+                context.stroke(path, with: .color(Color.pink.opacity(0.16)), lineWidth: 18)
+                context.stroke(
+                    path,
+                    with: .linearGradient(
+                        Gradient(colors: [.cyan, .pink, .orange, .yellow, .green]),
+                        startPoint: .zero,
+                        endPoint: CGPoint(x: size.width, y: 0)
+                    ),
+                    lineWidth: 3.5
+                )
             }
-            .frame(width: 132, height: 132)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 10)
         }
-        .padding(12)
-        .background(tileBackground)
-    }
-
-    private func regionTile(_ region: ChassisRegion, selected: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(selected ? region.accent.opacity(0.9) : Color.white.opacity(0.07))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(
-                Image(systemName: region.systemImage)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(selected ? .black : .white.opacity(0.65))
-            )
-    }
-
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color.white.opacity(0.04))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-            )
-    }
-
-    private var tileBackground: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.black.opacity(0.18))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
-            )
+        .frame(maxWidth: .infinity, minHeight: 152)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
+        )
     }
 }

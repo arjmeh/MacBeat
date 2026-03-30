@@ -8,15 +8,15 @@ struct MacandrumApp: App {
     var body: some Scene {
         MenuBarExtra("Macandrum", systemImage: viewModel.menuBarSymbol) {
             MenuBarRootView(viewModel: viewModel)
-                .frame(width: 440)
-                .preferredColorScheme(.dark)
+                .frame(width: 530)
+                .preferredColorScheme(.light)
         }
         .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView(viewModel: viewModel, isStandalone: true)
                 .frame(width: 460, height: 560)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }

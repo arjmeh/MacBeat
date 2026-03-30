@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct KitCardView: View {
@@ -5,49 +6,83 @@ struct KitCardView: View {
     let isSelected: Bool
     let action: () -> Void
 
+    private var macAccent: Color {
+        Color(nsColor: .controlAccentColor)
+    }
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top) {
                     Image(systemName: kit.systemImage)
-                        .font(.body.weight(.bold))
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.92))
+
                     Spacer()
+
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.white)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(macAccent)
                     }
                 }
 
-                Text(kit.name)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(kit.name)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
 
-                Text(kit.subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.75))
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
+                    Text(kit.subtitle)
+                        .font(.system(size: 12.5, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.82))
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                }
 
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     ForEach(kit.pads) { pad in
                         Circle()
                             .fill(pad.color)
-                            .frame(width: 8, height: 8)
+                            .frame(width: 14, height: 14)
                     }
                 }
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(LinearGradient(colors: kit.gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(.white.opacity(isSelected ? 0.7 : 0.15), lineWidth: isSelected ? 1.5 : 1)
-                    )
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 122, maxHeight: 122, alignment: .leading)
+            .background(cardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(isSelected ? macAccent.opacity(0.92) : Color.white.opacity(0.10), lineWidth: isSelected ? 1.6 : 1)
             )
-            .shadow(color: .black.opacity(0.25), radius: isSelected ? 16 : 10, y: 6)
+            .shadow(color: isSelected ? macAccent.opacity(0.45) : .black.opacity(0.12), radius: isSelected ? 18 : 10, y: 8)
         }
         .buttonStyle(.plain)
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.54),
+                        Color.black.opacity(0.44)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                isSelected ? macAccent.opacity(0.18) : Color.white.opacity(0.02),
+                                kit.gradient.last?.opacity(0.08) ?? .clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
     }
 }

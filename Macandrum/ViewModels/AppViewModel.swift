@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import Carbon
 
 final class AppViewModel: ObservableObject {
     @Published var selectedKitID: String {
@@ -26,6 +27,12 @@ final class AppViewModel: ObservableObject {
         didSet {
             defaults.set(volume, forKey: Keys.volume)
             audioEngine.setMasterVolume(volume)
+        }
+    }
+    @Published var drumsEnabled: Bool {
+        didSet {
+            defaults.set(drumsEnabled, forKey: Keys.drumsEnabled)
+            transientStatus = drumsEnabled ? "Drums are on." : "Drums are off."
         }
     }
     @Published var monitorInBackground: Bool {
@@ -61,6 +68,7 @@ final class AppViewModel: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private let shortcuts = ShortcutActionManager()
+    private let hotKeyMonitor = GlobalToggleHotKey()
     private var cancellables = Set<AnyCancellable>()
     private var lastAcceptedTapTime = 0.0
 
@@ -69,15 +77,19 @@ final class AppViewModel: ObservableObject {
         static let sensitivity = "app.sensitivity"
         static let cooldown = "app.cooldown"
         static let volume = "app.volume"
+        static let drumsEnabled = "app.drumsEnabled"
         static let background = "app.backgroundMonitoring"
         static let shortcutMapping = "app.shortcutMapping"
         static let microphoneAssist = "app.microphoneAssist"
     }
 
     init() {
-        let kitID = defaults.string(forKey: Keys.selectedKitID) ?? audioEngine.kits.first?.id ?? "meme-mode"
+        let storedKitID = defaults.string(forKey: Keys.selectedKitID)
+        let fallbackKitID = audioEngine.kits.first?.id ?? "electronic"
+        let kitID = audioEngine.kits.contains(where: { $0.id == storedKitID }) ? storedKitID! : fallbackKitID
         selectedKitID = kitID
         volume = defaults.object(forKey: Keys.volume) as? Double ?? 0.92
+        drumsEnabled = defaults.object(forKey: Keys.drumsEnabled) as? Bool ?? true
         sensitivity = defaults.object(forKey: Keys.sensitivity) as? Double ?? 0.72
         cooldown = defaults.object(forKey: Keys.cooldown) as? Double ?? 0.12
         monitorInBackground = defaults.object(forKey: Keys.background) as? Bool ?? true
@@ -95,10 +107,20 @@ final class AppViewModel: ObservableObject {
         audioEngine.selectKit(id: kitID)
 
         bindServices()
+        hotKeyMonitor.onPress = { [weak self] in
+            DispatchQueue.main.async {
+                self?.toggleDrumsEnabled()
+            }
+        }
+        hotKeyMonitor.register()
         if monitorInBackground {
             sensorManager.start()
             surfaceTapMonitor.start()
         }
+    }
+
+    deinit {
+        hotKeyMonitor.unregister()
     }
 
     var kits: [DrumKit] {
@@ -106,7 +128,18 @@ final class AppViewModel: ObservableObject {
     }
 
     var menuBarSymbol: String {
-        sensorManager.connectionState == .connected ? "waveform.path.ecg.rectangle" : "hand.tap.fill"
+        if drumsEnabled == false {
+            return "pause.circle.fill"
+        }
+        return sensorManager.connectionState == .connected ? "waveform.path.ecg.rectangle" : "hand.tap.fill"
+    }
+
+    var hotKeyDescription: String {
+        "Ctrl + Option + Command + D"
+    }
+
+    func toggleDrumsEnabled() {
+        drumsEnabled.toggle()
     }
 
     private func bindServices() {
@@ -131,6 +164,7 @@ final class AppViewModel: ObservableObject {
 
     private func accept(hit: HitEvent, source: String) {
         guard monitorInBackground else { return }
+        guard drumsEnabled else { return }
         guard hit.timestamp - lastAcceptedTapTime > 0.035 else { return }
 
         lastAcceptedTapTime = hit.timestamp
@@ -147,5 +181,81 @@ final class AppViewModel: ObservableObject {
             guard message.isEmpty == false else { return }
             self?.transientStatus = message
         }
+    }
+}
+
+private final class GlobalToggleHotKey {
+    var onPress: (() -> Void)?
+
+    private var hotKeyRef: EventHotKeyRef?
+    private var handlerRef: EventHandlerRef?
+    private let hotKeyID = EventHotKeyID(signature: OSType(0x4D434452), id: 1)
+
+    func register() {
+        unregister()
+
+        var eventSpec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        let selfPointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+
+        InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, event, userData in
+                guard
+                    let userData,
+                    let event,
+                    GetEventClass(event) == OSType(kEventClassKeyboard),
+                    GetEventKind(event) == UInt32(kEventHotKeyPressed)
+                else {
+                    return OSStatus(eventNotHandledErr)
+                }
+
+                let hotKey = Unmanaged<GlobalToggleHotKey>.fromOpaque(userData).takeUnretainedValue()
+                var pressedID = EventHotKeyID()
+                let status = GetEventParameter(
+                    event,
+                    EventParamName(kEventParamDirectObject),
+                    EventParamType(typeEventHotKeyID),
+                    nil,
+                    MemoryLayout<EventHotKeyID>.size,
+                    nil,
+                    &pressedID
+                )
+
+                guard status == noErr, pressedID.signature == hotKey.hotKeyID.signature, pressedID.id == hotKey.hotKeyID.id else {
+                    return OSStatus(eventNotHandledErr)
+                }
+
+                hotKey.onPress?()
+                return noErr
+            },
+            1,
+            &eventSpec,
+            selfPointer,
+            &handlerRef
+        )
+
+        RegisterEventHotKey(
+            UInt32(kVK_ANSI_D),
+            UInt32(controlKey | optionKey | cmdKey),
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &hotKeyRef
+        )
+    }
+
+    func unregister() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+        }
+        if let handlerRef {
+            RemoveEventHandler(handlerRef)
+            self.handlerRef = nil
+        }
+    }
+
+    deinit {
+        unregister()
     }
 }

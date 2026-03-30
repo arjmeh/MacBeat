@@ -1,0 +1,8 @@
+Drop your world percussion WAV files in this folder.
+
+Expected names:
+- world_bass.wav
+- world_slap.wav
+- world_shake.wav
+- world_bell.wav
+- world_wood.wav

@@ -14,6 +14,7 @@ final class AudioEngine: ObservableObject {
     private var playerPool: [AVAudioPlayerNode] = []
     private var nextPlayerIndex = 0
     private var kitVoices: [String: [String: AVAudioPCMBuffer]] = [:]
+    private var masterVolume: Float = 0.92
 
     init() {
         configureEngine()
@@ -35,21 +36,23 @@ final class AudioEngine: ObservableObject {
     func setMasterVolume(_ value: Double) {
         let clamped = Float(min(1.0, max(0.0, value)))
         audioQueue.async {
-            self.mixer.outputVolume = clamped
+            self.masterVolume = clamped
+            self.mixer.outputVolume = 1.0
         }
     }
 
     func play(region: ChassisRegion, intensity: Double) -> PlayedPad? {
         audioQueue.sync {
             guard let kit = currentKit() ?? kits.first else { return nil }
-            let pad = choosePad(in: kit, for: region, intensity: intensity)
+            let pad = choosePad(in: kit, for: region)
             guard let buffer = kitVoices[kit.id]?[pad.id] else { return nil }
 
             let node = playerPool[nextPlayerIndex]
             nextPlayerIndex = (nextPlayerIndex + 1) % playerPool.count
 
             node.stop()
-            node.volume = Float(min(1.15, max(0.18, intensity * 0.95)))
+            let intensityGain = Float(min(1.15, max(0.18, intensity * 0.95)))
+            node.volume = intensityGain * self.masterVolume
             node.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
             if node.isPlaying == false {
                 node.play()
@@ -80,16 +83,10 @@ final class AudioEngine: ObservableObject {
             engine.attach(player)
             engine.connect(player, to: mixer, format: AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1))
         }
-        mixer.outputVolume = 0.92
+        mixer.outputVolume = 1.0
     }
 
     private func buildKits() {
-        let memePads = [
-            DrumPad(id: "meme-thunk", name: "Desk Thunk", region: .bottom, role: .kick, color: .green, placeholderFileName: "meme_thunk.wav", sampleFolder: "MemeMode"),
-            DrumPad(id: "meme-clack", name: "Office Clack", region: .left, role: .snare, color: .orange, placeholderFileName: "office_clack.wav", sampleFolder: "MemeMode"),
-            DrumPad(id: "meme-zing", name: "Halo Zing", region: .right, role: .accent, color: .pink, placeholderFileName: "halo_zing.wav", sampleFolder: "MemeMode"),
-            DrumPad(id: "meme-fizz", name: "ASMR Fizz", region: .top, role: .hat, color: .cyan, placeholderFileName: "asmr_fizz.wav", sampleFolder: "MemeMode")
-        ]
         let electronicPads = [
             DrumPad(id: "elec-kick", name: "House Kick", region: .bottom, role: .kick, color: .green, placeholderFileName: "housekick.wav", sampleFolder: "Electronic"),
             DrumPad(id: "elec-hat", name: "House Hat", region: .top, role: .hat, color: .cyan, placeholderFileName: "househihat.wav", sampleFolder: "Electronic"),
@@ -97,25 +94,17 @@ final class AudioEngine: ObservableObject {
             DrumPad(id: "elec-clap", name: "House Clap", region: .left, role: .snare, color: .orange, placeholderFileName: "houseclap.wav", sampleFolder: "Electronic")
         ]
         let acousticPads = [
-            DrumPad(id: "ac-kick", name: "Kick", region: .bottom, role: .kick, color: .green, placeholderFileName: "kick.wav", sampleFolder: "Acoustic"),
-            DrumPad(id: "ac-shaker", name: "Shaker", region: .top, role: .hat, color: .cyan, placeholderFileName: "shaker.wav", sampleFolder: "Acoustic"),
+            DrumPad(id: "ac-kick", name: "Acoustic Kick", region: .bottom, role: .kick, color: .green, placeholderFileName: "acoustickick.wav", sampleFolder: "Acoustic"),
+            DrumPad(id: "ac-hat", name: "Acoustic Hat", region: .top, role: .hat, color: .cyan, placeholderFileName: "acoustichihat.wav", sampleFolder: "Acoustic"),
             DrumPad(id: "ac-tom", name: "Tom", region: .right, role: .accent, color: .pink, placeholderFileName: "tom.wav", sampleFolder: "Acoustic"),
-            DrumPad(id: "ac-snare", name: "Snare", region: .left, role: .snare, color: .orange, placeholderFileName: "snare.wav", sampleFolder: "Acoustic")
+            DrumPad(id: "ac-snare", name: "Acoustic Snare", region: .left, role: .snare, color: .orange, placeholderFileName: "acousticsnare.wav", sampleFolder: "Acoustic")
         ]
 
         let allKits = [
             DrumKit(
-                id: "meme-mode",
-                name: "Meme Mode",
-                subtitle: "Office rage, ASMR, Halo sparkle",
-                systemImage: "sparkles.rectangle.stack.fill",
-                gradient: [Color(red: 0.17, green: 0.27, blue: 0.52), Color(red: 0.94, green: 0.32, blue: 0.45)],
-                pads: memePads
-            ),
-            DrumKit(
                 id: "electronic",
                 name: "Electronic",
-                subtitle: "808s, claps, hats, stabs",
+                subtitle: "Punchy kick, clap, and bright hats",
                 systemImage: "waveform.badge.plus",
                 gradient: [Color(red: 0.07, green: 0.55, blue: 0.56), Color(red: 0.13, green: 0.84, blue: 0.56)],
                 pads: electronicPads
@@ -123,7 +112,7 @@ final class AudioEngine: ObservableObject {
             DrumKit(
                 id: "acoustic",
                 name: "Acoustic",
-                subtitle: "Kick, snare, tom, shaker",
+                subtitle: "Real kick, snare, and hi-hat",
                 systemImage: "music.mic",
                 gradient: [Color(red: 0.36, green: 0.23, blue: 0.17), Color(red: 0.82, green: 0.55, blue: 0.22)],
                 pads: acousticPads
@@ -149,14 +138,6 @@ final class AudioEngine: ObservableObject {
         }
 
         switch pad.id {
-        case "meme-thunk":
-            return makeKickBuffer(duration: 0.42, startFrequency: 92, endFrequency: 42, punch: 1.2)
-        case "meme-clack":
-            return makeClackBuffer(duration: 0.16)
-        case "meme-zing":
-            return makeSynthStab(duration: 0.52, rootFrequency: 440, detune: 1.498)
-        case "meme-fizz":
-            return makeShakerBuffer(duration: 0.22, brightness: 0.96)
         case "elec-kick":
             return makeKickBuffer(duration: 0.52, startFrequency: 128, endFrequency: 38, punch: 1.45)
         case "elec-hat":
@@ -167,8 +148,8 @@ final class AudioEngine: ObservableObject {
             return makeClapBuffer(duration: 0.28)
         case "ac-kick":
             return makeKickBuffer(duration: 0.48, startFrequency: 100, endFrequency: 48, punch: 1.0)
-        case "ac-shaker":
-            return makeShakerBuffer(duration: 0.26, brightness: 0.88)
+        case "ac-hat":
+            return makeHatBuffer(duration: 0.16)
         case "ac-tom":
             return makeTomBuffer(duration: 0.34, frequency: 168)
         case "ac-snare":
@@ -230,8 +211,8 @@ final class AudioEngine: ObservableObject {
         return output
     }
 
-    private func choosePad(in kit: DrumKit, for region: ChassisRegion, intensity: Double) -> DrumPad {
-        let preferredRole = preferredRole(for: region, intensity: intensity)
+    private func choosePad(in kit: DrumKit, for region: ChassisRegion) -> DrumPad {
+        let preferredRole = preferredRole(for: region)
 
         if let exactRoleMatch = kit.pads.first(where: { $0.role == preferredRole && $0.region == region }) {
             return exactRoleMatch
@@ -245,7 +226,7 @@ final class AudioEngine: ObservableObject {
         return kit.pads.first ?? DrumPad(id: "fallback", name: "Fallback", region: .center, role: .kick, color: .white, placeholderFileName: "", sampleFolder: "")
     }
 
-    private func preferredRole(for region: ChassisRegion, intensity: Double) -> PadRole {
+    private func preferredRole(for region: ChassisRegion) -> PadRole {
         switch region {
         case .right:
             return .kick

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MacBeat — Turn Your MacBook Into Drums</title>
+  <meta
+    name="description"
+    content="MacBeat turns taps on your MacBook into live drums. Clean, fast, and built for Apple Silicon MacBooks."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="icon" type="image/png" href="./MacBeatIconOnFinal.png">
+  <link rel="apple-touch-icon" href="./MacBeatIconOnFinal.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <span class="badge badge-highlight">instant beats</span>
+      <span class="top-link">zero setup</span>
+      <span class="top-link">fidget fun</span>
+    </header>
+
+    <section class="hero">
+      <img src="MacBeatIconOnFinal.png" alt="" class="hero-art hero-float">
+
+      <div class="hero-copy">
+        <h1>MacBeat</h1>
+
+        <p class="subtitle">
+          Tap your MacBook. It plays drums.
+          <br>
+          That’s it. That’s the app.
+        </p>
+
+        <a id="download-button" class="download-button" href="./MacBeat.zip" download>
+          Download for Free
+        </a>
+
+        <p class="footnote">
+          macOS 14.6+ · Apple Silicon MacBook required
+        </p>
+
+        <section class="video-section" aria-label="MacBeat preview videos">
+          <div class="video-card">
+            <div class="video-frame">
+              <video controls muted playsinline preload="metadata" poster="">
+                <source src="https://res.cloudinary.com/dqmng8oyy/video/upload/f_mp4,q_auto/v1774910106/0330_escxxd.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+
+          <div class="video-card">
+            <div class="video-frame">
+              <video controls muted playsinline preload="metadata" poster="">
+                <source src="https://res.cloudinary.com/dqmng8oyy/video/upload/f_mp4,q_auto/v1774918862/MacBeat_mgkarg.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </section>
+
+        <section class="feature-showcase" aria-label="MacBeat features">
+          <article class="feature-card feature-card-large">
+            <div class="feature-visual feature-visual-kits">
+              <button class="kit-panel is-active" type="button" data-kit="electronic" aria-pressed="true">
+                <span class="kit-panel-icon" aria-hidden="true">
+                  <img src="./electronic-icon.png" alt="" class="kit-icon-image">
+                </span>
+                <strong>Electronic</strong>
+                <span>Punchy kick, clap, and bright hats</span>
+              </button>
+
+              <button class="kit-panel" type="button" data-kit="acoustic" aria-pressed="false">
+                <span class="kit-panel-icon" aria-hidden="true">
+                  <img src="./acoustic-icon.png" alt="" class="kit-icon-image">
+                </span>
+                <strong>Acoustic</strong>
+                <span>Real kick, snare, and hi-hat</span>
+              </button>
+            </div>
+            <div class="feature-copy">
+              <h2>Switch kits fast</h2>
+              <p>Jump between electronic and acoustic sounds in one click, then hit play to hear the current kit.</p>
+            </div>
+            <div class="kit-preview-row">
+              <button class="preview-button" type="button" id="kit-preview-button">
+                <span class="preview-button-icon" aria-hidden="true">▶</span>
+                <span id="kit-preview-label">Play Electronic Kit</span>
+              </button>
+              <span class="preview-status" id="kit-preview-status">Selected: Electronic</span>
+            </div>
+          </article>
+
+        </section>
+
+        <p class="feature-hotkey-note">Ctrl + Option + Command + D hotkey for turning drums on or off</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>

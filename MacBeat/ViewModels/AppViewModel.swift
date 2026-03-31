@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import Carbon
+import AppKit
 
 final class AppViewModel: ObservableObject {
     @Published var selectedKitID: String {
@@ -58,6 +59,24 @@ final class AppViewModel: ObservableObject {
             defaults.set(shortcutMapping.rawValue, forKey: Keys.shortcutMapping)
         }
     }
+    @Published var leftZoneRole: PadRole {
+        didSet {
+            defaults.set(leftZoneRole.rawValue, forKey: Keys.leftZoneRole)
+            applySurfaceRouting()
+        }
+    }
+    @Published var centerZoneRole: PadRole {
+        didSet {
+            defaults.set(centerZoneRole.rawValue, forKey: Keys.centerZoneRole)
+            applySurfaceRouting()
+        }
+    }
+    @Published var rightZoneRole: PadRole {
+        didSet {
+            defaults.set(rightZoneRole.rawValue, forKey: Keys.rightZoneRole)
+            applySurfaceRouting()
+        }
+    }
     @Published private(set) var transientStatus = "Ready to make your laptop groove."
     @Published private(set) var lastTapSource = "Accelerometer + Mic"
 
@@ -81,6 +100,9 @@ final class AppViewModel: ObservableObject {
         static let background = "app.backgroundMonitoring"
         static let shortcutMapping = "app.shortcutMapping"
         static let microphoneAssist = "app.microphoneAssist"
+        static let leftZoneRole = "app.leftZoneRole"
+        static let centerZoneRole = "app.centerZoneRole"
+        static let rightZoneRole = "app.rightZoneRole"
     }
 
     init() {
@@ -95,6 +117,11 @@ final class AppViewModel: ObservableObject {
         monitorInBackground = defaults.object(forKey: Keys.background) as? Bool ?? true
         microphoneAssistEnabled = false
         shortcutMapping = .none
+        leftZoneRole = AppViewModel.loadStoredRole(defaults.string(forKey: Keys.leftZoneRole), fallback: .snare)
+        centerZoneRole = AppViewModel.loadStoredRole(defaults.string(forKey: Keys.centerZoneRole), fallback: .hat)
+        rightZoneRole = AppViewModel.loadStoredRole(defaults.string(forKey: Keys.rightZoneRole), fallback: .kick)
+
+        normalizeSurfaceRouting()
 
         audioEngine.setMasterVolume(volume)
         sensorManager.sensitivity = sensitivity
@@ -105,6 +132,7 @@ final class AppViewModel: ObservableObject {
         defaults.set(microphoneAssistEnabled, forKey: Keys.microphoneAssist)
         defaults.set(shortcutMapping.rawValue, forKey: Keys.shortcutMapping)
         audioEngine.selectKit(id: kitID)
+        applySurfaceRouting()
 
         bindServices()
         hotKeyMonitor.onPress = { [weak self] in
@@ -133,6 +161,72 @@ final class AppViewModel: ObservableObject {
 
     func toggleDrumsEnabled() {
         drumsEnabled.toggle()
+    }
+
+    func role(for zone: SurfaceZone) -> PadRole {
+        switch zone {
+        case .left:
+            return leftZoneRole
+        case .center:
+            return centerZoneRole
+        case .right:
+            return rightZoneRole
+        }
+    }
+
+    func assign(role: PadRole, to zone: SurfaceZone) {
+        guard PadRole.mappableCases.contains(role) else { return }
+
+        let previous = self.role(for: zone)
+        guard previous != role else { return }
+
+        if let existingZone = SurfaceZone.allCases.first(where: { self.role(for: $0) == role }) {
+            setRole(previous, for: existingZone)
+        }
+
+        setRole(role, for: zone)
+        transientStatus = "\(zone.title) now plays \(role.shortTitle.lowercased())."
+    }
+
+    func quitApp() {
+        NSApplication.shared.terminate(nil)
+    }
+
+    private static func loadStoredRole(_ rawValue: String?, fallback: PadRole) -> PadRole {
+        guard let rawValue, let role = PadRole(rawValue: rawValue), PadRole.mappableCases.contains(role) else {
+            return fallback
+        }
+        return role
+    }
+
+    private func setRole(_ role: PadRole, for zone: SurfaceZone) {
+        switch zone {
+        case .left:
+            leftZoneRole = role
+        case .center:
+            centerZoneRole = role
+        case .right:
+            rightZoneRole = role
+        }
+    }
+
+    private func normalizeSurfaceRouting() {
+        var used: Set<PadRole> = []
+        for zone in SurfaceZone.allCases {
+            let currentRole = role(for: zone)
+            if used.contains(currentRole) {
+                if let replacement = PadRole.mappableCases.first(where: { used.contains($0) == false }) {
+                    setRole(replacement, for: zone)
+                    used.insert(replacement)
+                }
+            } else {
+                used.insert(currentRole)
+            }
+        }
+    }
+
+    private func applySurfaceRouting() {
+        audioEngine.setSurfaceRouting(left: leftZoneRole, center: centerZoneRole, right: rightZoneRole)
     }
 
     private func bindServices() {

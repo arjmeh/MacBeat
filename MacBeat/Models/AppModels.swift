@@ -105,6 +105,88 @@ enum PadRole: String {
     case snare
     case hat
     case accent
+
+    static let mappableCases: [PadRole] = [.kick, .snare, .hat]
+
+    var title: String {
+        switch self {
+        case .kick:
+            return "Kick"
+        case .snare:
+            return "Snare"
+        case .hat:
+            return "Hat"
+        case .accent:
+            return "Accent"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .kick:
+            return "Bass"
+        case .snare:
+            return "Snare"
+        case .hat:
+            return "Hi-Hat"
+        case .accent:
+            return "Accent"
+        }
+    }
+
+    var accentColor: Color {
+        switch self {
+        case .kick:
+            return Color(red: 0.18, green: 0.68, blue: 0.43)
+        case .snare:
+            return Color(red: 0.96, green: 0.56, blue: 0.24)
+        case .hat:
+            return Color(red: 0.16, green: 0.50, blue: 0.96)
+        case .accent:
+            return Color(red: 0.69, green: 0.44, blue: 0.95)
+        }
+    }
+}
+
+enum SurfaceZone: String, CaseIterable, Identifiable {
+    case left
+    case center
+    case right
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .left:
+            return "Left"
+        case .center:
+            return "Middle"
+        case .right:
+            return "Right"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .left:
+            return "Left side"
+        case .center:
+            return "Touchpad zone"
+        case .right:
+            return "Right side"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .left:
+            return "rectangle.leadinghalf.inset.filled.arrow.leading"
+        case .center:
+            return "rectangle.center.inset.filled"
+        case .right:
+            return "rectangle.trailinghalf.inset.filled.arrow.trailing"
+        }
+    }
 }
 
 enum ShortcutMapping: String, CaseIterable, Identifiable {

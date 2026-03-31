@@ -22,7 +22,8 @@ struct MenuBarRootView: View {
                 Divider().overlay(Color.black.opacity(0.10))
                 kitSelectionSection
                 controlsSection
-                hotkeyFootnote
+                routingSection
+                footerSection
             }
             .padding(16)
         }
@@ -108,6 +109,22 @@ struct MenuBarRootView: View {
         }
     }
 
+    private var routingSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Tap Mapping")
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.black.opacity(0.80))
+            }
+
+            HStack(alignment: .top, spacing: 10) {
+                ForEach(SurfaceZone.allCases) { zone in
+                    routingCard(for: zone)
+                }
+            }
+        }
+    }
+
     private var micAssistPill: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
@@ -158,13 +175,118 @@ struct MenuBarRootView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var hotkeyFootnote: some View {
-        Text("Hotkey: \(viewModel.hotKeyDescription)")
-            .font(.system(size: 12, weight: .medium, design: .rounded))
-            .foregroundStyle(Color.black.opacity(0.44))
-            .frame(maxWidth: .infinity)
-            .multilineTextAlignment(.center)
-            .padding(.top, 2)
+    private func routingCard(for zone: SurfaceZone) -> some View {
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 8) {
+                Image(systemName: zone.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.black.opacity(0.54))
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(zone.title)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.black.opacity(0.80))
+
+                    Text(zone.subtitle)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.black.opacity(0.45))
+                }
+            }
+
+            VStack(spacing: 7) {
+                ForEach(PadRole.mappableCases, id: \.rawValue) { role in
+                    roleChoiceButton(role: role, zone: zone, isSelected: viewModel.role(for: zone) == role)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    viewModel.role(for: zone).accentColor.opacity(0.10),
+                                    Color.white.opacity(0.06)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.34), lineWidth: 1)
+                )
+        )
+    }
+
+    private func roleChoiceButton(role: PadRole, zone: SurfaceZone, isSelected: Bool) -> some View {
+        Button {
+            viewModel.assign(role: role, to: zone)
+        } label: {
+            HStack(spacing: 8) {
+                PadRoleIcon(role: role, tint: isSelected ? role.accentColor : Color.black.opacity(0.46))
+                    .frame(width: 14, height: 14)
+
+                Text(role.shortTitle)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.black.opacity(isSelected ? 0.82 : 0.58))
+
+                Spacer(minLength: 0)
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(role.accentColor)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? role.accentColor.opacity(0.14) : Color.white.opacity(0.28))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(isSelected ? role.accentColor.opacity(0.42) : Color.black.opacity(0.04), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var footerSection: some View {
+        VStack(spacing: 10) {
+            Text("Hotkey: \(viewModel.hotKeyDescription)")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(Color.black.opacity(0.44))
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+
+            Button {
+                viewModel.quitApp()
+            } label: {
+                Text("Quit MacBeat")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.black.opacity(0.78))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 9)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.35))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("q", modifiers: .command)
+        }
+        .padding(.top, 2)
     }
 
     private var backgroundWash: some View {
@@ -202,5 +324,35 @@ struct MenuBarRootView: View {
                 Rectangle()
                     .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
             )
+    }
+}
+
+private struct PadRoleIcon: View {
+    let role: PadRole
+    let tint: Color
+
+    var body: some View {
+        Group {
+            switch role {
+            case .kick:
+                roleImage(named: "kickdrum")
+            case .snare:
+                roleImage(named: "snare")
+            case .hat:
+                roleImage(named: "hihat")
+            case .accent:
+                Image(systemName: "sparkles")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(tint)
+            }
+        }
+    }
+
+    private func roleImage(named name: String) -> some View {
+        Image(nsImage: NSImage(contentsOfFile: "/Users/arjunmehrotra/Downloads/Tappy/Tappy/MacBeat/Assets/PadIcons/\(name).png") ?? NSImage())
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(tint)
     }
 }

@@ -18,6 +18,9 @@ final class AudioEngine: ObservableObject {
     private var masterVolume: Float = 0.92
     private var notificationObservers: [NSObjectProtocol] = []
     private var restartWorkItem: DispatchWorkItem?
+    private var leftZoneRole: PadRole = .snare
+    private var centerZoneRole: PadRole = .hat
+    private var rightZoneRole: PadRole = .kick
 
     init() {
         configureEngine()
@@ -47,6 +50,14 @@ final class AudioEngine: ObservableObject {
         audioQueue.async {
             self.masterVolume = clamped
             self.mixer.outputVolume = 1.0
+        }
+    }
+
+    func setSurfaceRouting(left: PadRole, center: PadRole, right: PadRole) {
+        audioQueue.async {
+            self.leftZoneRole = left
+            self.centerZoneRole = center
+            self.rightZoneRole = right
         }
     }
 
@@ -272,11 +283,11 @@ final class AudioEngine: ObservableObject {
     private func preferredRole(for region: ChassisRegion) -> PadRole {
         switch region {
         case .right:
-            return .kick
+            return rightZoneRole
         case .left:
-            return .snare
+            return leftZoneRole
         case .top, .bottom, .center:
-            return .hat
+            return centerZoneRole
         }
     }
 
